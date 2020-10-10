@@ -28,10 +28,9 @@
 #
 # *****************************************************************************
 
-import warnings
-warnings.warn("ignore", DeprecationWarning)
-warnings.warn("ignore", SourceChangeWarning)
-warnings.warn("ignore", UserWarning)
+import warnings 
+warnings.filterwarnings("ignore")
+
 
 import os
 from scipy.io.wavfile import write
