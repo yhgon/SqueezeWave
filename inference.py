@@ -83,7 +83,7 @@ def main(mel_files, squeezewave_path, sigma, output_dir, sampling_rate, is_fp16,
         audio_path = os.path.join(
             output_dir, "{}_s{}.wav".format(file_name,sigma))
         write(audio_path, sampling_rate, audio)
-        print("{} {:4.3f} {:4.3f} {:4.3f} {:4.3f} ", format(audio_path, dur,sec_wav, dur/sec_wav,  sec_wav/dur   ) ) 
+        print("{} {:4.3f} {:4.3f} {:4.3f} {:4.3f} ".format(audio_path, dur,sec_wav, dur/sec_wav,  sec_wav/dur   ) ) 
 
 
 if __name__ == "__main__":
