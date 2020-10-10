@@ -27,15 +27,22 @@
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # *****************************************************************************
+
+import warnings
+warnings.warn("ignore", DeprecationWarning)
+warnings.warn("ignore", SourceChangeWarning)
+warnings.warn("ignore", UserWarning)
+
 import os
 from scipy.io.wavfile import write
 import torch
 from mel2samp import files_to_list, MAX_WAV_VALUE
 from denoiser import Denoiser
-
+import time
 
 def main(mel_files, squeezewave_path, sigma, output_dir, sampling_rate, is_fp16,
          denoiser_strength):
+    tic_prepare= time.time()
     mel_files = files_to_list(mel_files)
     squeezewave = torch.load(squeezewave_path)['model']
     squeezewave = squeezewave.remove_weightnorm(squeezewave)
@@ -46,6 +53,11 @@ def main(mel_files, squeezewave_path, sigma, output_dir, sampling_rate, is_fp16,
 
     if denoiser_strength > 0:
         denoiser = Denoiser(squeezewave).cuda()
+        
+    toc_prepare = time.time()
+    dur_prepare = toc_prepare - tic_prepare
+    print("prepare model {:3.2}sec".format(dur_prepare) )
+    
 
     for i, file_path in enumerate(mel_files):
         file_name = os.path.splitext(os.path.basename(file_path))[0]
@@ -53,18 +65,26 @@ def main(mel_files, squeezewave_path, sigma, output_dir, sampling_rate, is_fp16,
         mel = torch.autograd.Variable(mel.cuda())
         mel = torch.unsqueeze(mel, 0)
         mel = mel.half() if is_fp16 else mel
+        tic=time.time()
+        
         with torch.no_grad():
             audio = squeezewave.infer(mel, sigma=sigma).float()
             if denoiser_strength > 0:
                 audio = denoiser(audio, denoiser_strength)
             audio = audio * MAX_WAV_VALUE
+        toc=time.time()
+        dur = toc -tic
+        
         audio = audio.squeeze()
         audio = audio.cpu().numpy()
+        
+        len_wav = len(audio)
+        sec_wav = len_wav/sampling_rate
         audio = audio.astype('int16')
         audio_path = os.path.join(
-            output_dir, "{}_synthesis.wav".format(file_name))
+            output_dir, "{}_s{}.wav".format(file_name,sigma))
         write(audio_path, sampling_rate, audio)
-        print(audio_path)
+        print("{} {:4.3f} {:4.3f} {:4.3f} {:4.3f} ", format(audio_path, dur,sec_wav, dur/sec_wav,  sec_wav/dur   ) ) 
 
 
 if __name__ == "__main__":
