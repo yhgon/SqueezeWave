@@ -79,11 +79,12 @@ def main(mel_files, squeezewave_path, sigma, output_dir, sampling_rate, is_fp16,
         
         len_wav = len(audio)
         sec_wav = len_wav/sampling_rate
+        samples_sec =  len_wav / dur
         audio = audio.astype('int16')
         audio_path = os.path.join(
             output_dir, "{}_s{}.wav".format(file_name,sigma))
         write(audio_path, sampling_rate, audio)
-        print("{} {:4.3f} {:4.3f} {:4.3f} {:4.3f} ".format(audio_path, dur,sec_wav, dur/sec_wav,  sec_wav/dur   ) ) 
+        print("{} it took {:4.3f}sec  for  {:4.3f}sec {:4.2f}K sample 22Khz Audio files :   RTF {:4.3f} {:4.3f}X  {}Ksamples/sec  ".format(audio_path, dur, len_wav/1000, sec_wav, dur/sec_wav,  sec_wav/dur , samples_sec  ) ) 
 
 
 if __name__ == "__main__":
